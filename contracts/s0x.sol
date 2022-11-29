@@ -394,6 +394,9 @@ contract Users {
     mapping(address => Impact) public impx;
     mapping(address => string) public name;
 
+    event UserCreated(address user);
+    event UserUpdated(address user, bytes oldDias, bytes newDias);
+
     modifier isAdmin() {
         require(msg.sender == s0x);
         _;
@@ -416,11 +419,16 @@ contract Users {
         uint256 _r,
         string memory _name
     ) internal returns (bool) {
+        require(msg.sender != address(0), "invalid address");
+
         users[_adr] = _dias;
         roles[_adr] = _r;
         impx[_adr] = Impact(0, 0, 0);
         name[_adr] = _name;
         isUser[_adr] = true;
+
+        emit UserCreated(_adr);
+
         return true;
     }
 
@@ -440,12 +448,18 @@ contract Users {
         uint256 _r
     ) external isAdmin returns (bool) {
         string memory _name = name[_adr];
+
+        emit UserUpdated(_adr, users[_adr], bytes(_dias));
+
         return makeUser(_adr, bytes(_dias), _r, _name);
     }
 
     // takes address , dias , and role to edit and store your user profile in user mapping
     function editUser(string memory _dias) external returns (bool) {
         string memory _name = name[msg.sender];
+
+        emit UserUpdated(msg.sender, users[msg.sender], bytes(_dias));
+
         return makeUser(msg.sender, bytes(_dias), roles[msg.sender], _name);
     }
 

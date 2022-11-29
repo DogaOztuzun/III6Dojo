@@ -11,6 +11,11 @@ module.exports = {
       port: 7545, // Standard Ethereum port (default: none)
       network_id: "5777", // Any network (default: none)
     },
+    test: {
+      host: "127.0.0.1",
+      port: 8545,
+      network_id: "*",
+    },
     polygon: {
       provider: () => new HDWalletProvider(mnemonic, process.env.POLY_URL),
       network_id: 137,
