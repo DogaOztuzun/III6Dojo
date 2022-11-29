@@ -410,6 +410,8 @@ contract Users {
             99,
             "s0xAdmin"
         ); // admin user account setup
+
+        emit UserCreated(s0x);
     }
 
     // takes address , dias , and role to create and store a user profile in user mapping
@@ -427,8 +429,6 @@ contract Users {
         name[_adr] = _name;
         isUser[_adr] = true;
 
-        emit UserCreated(_adr);
-
         return true;
     }
 
@@ -438,6 +438,8 @@ contract Users {
         address _user,
         string calldata _name
     ) external returns (bool) {
+        emit UserCreated(_user);
+
         return makeUser(_user, bytes(_dias), 2, _name);
     }
 
