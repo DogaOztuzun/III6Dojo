@@ -419,7 +419,7 @@ contract Users {
         uint256 _r,
         string memory _name
     ) internal returns (bool) {
-        require(msg.sender != address(0), "invalid address");
+        require(address(_adr) != address(0), "invalid address");
 
         users[_adr] = _dias;
         roles[_adr] = _r;

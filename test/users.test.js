@@ -74,4 +74,19 @@ contract('Users', (accounts) => {
 
         assert.fail('should have thrown before');
     });
+
+    it('should not be able to add user with zero address', async ()=> {
+        const usersInstance = await Users.deployed();
+
+        const dias = 'dias-text';
+        try {
+            await usersInstance.createUserAccount(dias, "0x0000000000000000000000000000000000000000", "test");
+            assert.fail("The transaction should have thrown an error");
+        } catch (e) {
+            assert.include(e.message, "invalid address", "The error message should contain 'invalid address'");
+            return true;
+        }
+
+        assert.fail('should have thrown before');
+    });
 })
