@@ -14,8 +14,14 @@ contract('Users', (accounts) => {
         const dias = 'dias-text';
         await usersInstance.createUserAccount(dias, accounts[1], "test");
         const isUser = await usersInstance.isU(accounts[1]);
+        const name = await usersInstance.getName(accounts[1]);
+        const role = await usersInstance.getRole(accounts[1]);
+        const userDias = await usersInstance.showUser(accounts[1]);
 
         assert.equal(isUser, true, "added user");
+        assert.equal(name, "test", "name");
+        assert.equal(role, 2, "role");
+        assert.equal(userDias, dias, "dias");
     });
 
     it('should be editable by owner', async () => {
