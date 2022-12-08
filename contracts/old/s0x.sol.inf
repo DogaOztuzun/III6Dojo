@@ -409,6 +409,9 @@ contract Users {
     mapping(address => Impact) public impx;
     mapping(address => string) public name;
 
+    event UserCreated(address user);
+    event UserUpdated(address user, bytes oldDias, bytes newDias);
+
     error Unathorized();
 
     modifier isAdmin() {
@@ -424,6 +427,8 @@ contract Users {
             99,
             "s0xAdmin"
         ); // admin user account setup
+
+        emit UserCreated(s0x);
     }
 
     // takes address , dias , and role to create and store a user profile in user mapping
@@ -433,6 +438,8 @@ contract Users {
         uint256 _r,
         string memory _name
     ) internal returns (bool) {
+        require(address(_adr) != address(0), "invalid address");
+
         users[_adr] = _dias;
         isUser[_adr] = true;
         roles[_adr] = _r;
@@ -447,6 +454,8 @@ contract Users {
         address _user,
         string calldata _name
     ) external returns (bool) {
+        emit UserCreated(_user);
+
         return makeUser(_user, bytes(_dias), 2, _name); // role 2 is Affily8
     }
 
@@ -457,6 +466,9 @@ contract Users {
         uint256 _r
     ) external isAdmin returns (bool) {
         string memory _name = name[_adr];
+
+        emit UserUpdated(_adr, users[_adr], bytes(_dias));
+
         return makeUser(_adr, bytes(_dias), _r, _name);
     }
 
