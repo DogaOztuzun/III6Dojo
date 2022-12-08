@@ -1,98 +1,85 @@
-const Users = artifacts.require("Users");
+const { expect } = require("chai");
 
-contract('Users', (accounts) => {
+let owner, user, user2;
+let UserContract;
+
+describe('Users', (accounts) => {
+    beforeEach(async () => {
+        [owner, user, user2] = await ethers.getSigners();
+        const Users = await ethers.getContractFactory("s0xUsers");
+
+        UserContract = await Users.deploy();
+        await UserContract.deployed();
+    });
+
     it('should deploy', async () => {
-        const usersInstance = await Users.deployed();
-        const isUser = await usersInstance.isU(accounts[0]);
+        const isUser = await UserContract.isU(owner.address);
 
-        assert.equal(isUser, true, "deployer");
+        expect(isUser).to.be.equal(true);
     });
 
     it('should add user', async () => {
-        const usersInstance = await Users.deployed();
-
         const dias = 'dias-text';
-        await usersInstance.createUserAccount(dias, accounts[1], "test");
-        const isUser = await usersInstance.isU(accounts[1]);
-        const name = await usersInstance.getName(accounts[1]);
-        const role = await usersInstance.getRole(accounts[1]);
-        const userDias = await usersInstance.showUser(accounts[1]);
+        await expect(UserContract.createUserAccount(dias, user.address, "test")).to.emit(UserContract, 'UserCreated');
 
-        assert.equal(isUser, true, "added user");
-        assert.equal(name, "test", "name");
-        assert.equal(role, 2, "role");
-        assert.equal(userDias, dias, "dias");
+        const isUser = await UserContract.isU(user.address);
+        const name = await UserContract.getName(user.address);
+        const role = await UserContract.getRole(user.address);
+        const userDias = await UserContract.showUser(user.address);
+
+        expect(isUser).to.be.equal(true);
+        expect(name).to.be.equal("test");
+        expect(role).to.be.equal(2);
+        expect(userDias).to.be.equal(dias);
     });
 
     it('should be editable by owner', async () => {
-        const usersInstance = await Users.deployed();
-
         const dias = 'dias-text';
-        await usersInstance.createUserAccount(dias, accounts[1], "test");
-        const isUser = await usersInstance.isU(accounts[1]);
 
-        assert.equal(isUser, true, "added user");
+        await UserContract.createUserAccount(dias, user.address, "test");
+        const isUser = await UserContract.isU(user.address);
+
+        expect(isUser).to.be.equal(true);
 
         const diasUpdated = 'updated-dias-text';
-        await usersInstance.adminEditUser(accounts[1], diasUpdated, 3);
+        await expect(UserContract.adminEditUser(user.address, diasUpdated, 3)).to.emit(UserContract, 'UserUpdated');
 
-        const userDias = await usersInstance.showUser(accounts[1]);
-        const userRole = await usersInstance.getRole(accounts[1]);
+        const userDias = await UserContract.showUser(user.address);
+        const userRole = await UserContract.getRole(user.address);
 
-        assert.equal(userDias, diasUpdated, "updated user dias");
-        assert.equal(userRole, 3, "updated user role");
+        expect(userDias).to.be.equal(diasUpdated, "updated user dias");
+        expect(userRole).to.be.equal(3, "updated user role");
     });
 
     it('should be editable by user', async () => {
-        const usersInstance = await Users.deployed();
-
         const dias = 'dias-text';
-        await usersInstance.createUserAccount(dias, accounts[1], "test");
-        const isUser = await usersInstance.isU(accounts[1]);
+        await UserContract.createUserAccount(dias, user.address, "test");
+        const isUser = await UserContract.isU(user.address);
 
-        assert.equal(isUser, true, "added user");
+        expect(isUser).to.be.equal(true, "added user");
 
         const diasUpdated = 'updated-dias-text';
-        await usersInstance.editUser(diasUpdated, {from: accounts[1]});
+        await expect(UserContract.connect(user).editUser(diasUpdated)).to.emit(UserContract, 'UserUpdated');
 
-        const userDias = await usersInstance.showUser(accounts[1]);
+        const userDias = await UserContract.showUser(user.address);
 
-        assert.equal(userDias, diasUpdated, "updated user dias");
+        expect(userDias).to.be.equal(diasUpdated, "updated user dias");
     });
 
     it('should not be editable by non-owner', async () => {
-        const usersInstance = await Users.deployed();
-
         const dias = 'dias-text';
-        await usersInstance.createUserAccount(dias, accounts[1], "test");
-        const isUser = await usersInstance.isU(accounts[1]);
+        await UserContract.createUserAccount(dias, user.address, "test");
+        const isUser = await UserContract.isU(user.address);
 
-        assert.equal(isUser, true, "added user");
+        expect(isUser).to.be.equal(true, "added user");
 
         const diasUpdated = 'updated-dias-text';
-        try {
-            await usersInstance.adminEditUser(accounts[1], diasUpdated, 3, {from: accounts[2]});
-            assert.fail("The transaction should have thrown an error");
-        } catch (e) {
-            assert.include(e.message, "revert", "The error message should contain 'revert'");
-            return true;
-        }
 
-        assert.fail('should have thrown before');
+        await expect(UserContract.connect(user2).adminEditUser(user.address, diasUpdated, 3)).to.be.reverted;
     });
 
-    it('should not be able to add user with zero address', async ()=> {
-        const usersInstance = await Users.deployed();
-
+    it('should not be able to add user with zero address', async () => {
         const dias = 'dias-text';
-        try {
-            await usersInstance.createUserAccount(dias, "0x0000000000000000000000000000000000000000", "test");
-            assert.fail("The transaction should have thrown an error");
-        } catch (e) {
-            assert.include(e.message, "invalid address", "The error message should contain 'invalid address'");
-            return true;
-        }
-
-        assert.fail('should have thrown before');
+        await expect(UserContract.createUserAccount(dias, "0x0000000000000000000000000000000000000000", "test")).to.be.reverted;            
     });
 })

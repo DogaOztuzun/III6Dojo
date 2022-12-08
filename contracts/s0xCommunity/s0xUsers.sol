@@ -122,6 +122,9 @@ contract s0xUsers {
     mapping(address => Impact) public impx;
     mapping(address => string) public name;
 
+    event UserCreated(address user);
+    event UserUpdated(address user, bytes oldDias, bytes newDias);
+
     error Unathorized();
 
     modifier isAdmin() {
@@ -137,6 +140,8 @@ contract s0xUsers {
             99,
             "s0xAdmin"
         ); // admin user account setup
+
+        emit UserCreated(s0x);
     }
 
     // takes address , dias , and role to create and store a user profile in user mapping
@@ -146,6 +151,8 @@ contract s0xUsers {
         uint256 _r,
         string memory _name
     ) internal returns (bool) {
+        require(_adr != address(0), "invalid address");
+
         users[_adr] = _dias;
         isUser[_adr] = true;
         roles[_adr] = _r;
@@ -160,6 +167,8 @@ contract s0xUsers {
         address _user,
         string calldata _name
     ) external returns (bool) {
+        emit UserCreated(_user);
+
         return makeUser(_user, bytes(_dias), 2, _name); // role 2 is Affily8
     }
 
@@ -169,12 +178,16 @@ contract s0xUsers {
         string memory _dias,
         uint256 _r
     ) external isAdmin returns (bool) {
+        emit UserUpdated(_adr, users[_adr], bytes(_dias));
+
         string memory _name = name[_adr];
         return makeUser(_adr, bytes(_dias), _r, _name);
     }
 
     // takes address , dias , and role to edit and store your user profile in user mapping
     function editUser(string memory _dias) external returns (bool) {
+        emit UserUpdated(msg.sender, users[msg.sender], bytes(_dias));
+
         string memory _name = name[msg.sender];
         return makeUser(msg.sender, bytes(_dias), 2, _name);
     }
